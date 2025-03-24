@@ -15,7 +15,7 @@
   "author": "Keshav",
   "type": "module",
   "main": "index.js",
-  "scripts": {    
+  "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "devDependencies": {
@@ -24,8 +24,10 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "mongoose": "^8.12.2",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "mongoose": "^8.12.2"
   }
 }
