@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser'
 -cookieParser from 'cookie-parser'
 const app=express();
 
-
+// 8-10 me cors direct imply boiler code
 app.use(cors({
     origin:process.env.CORS_ORIGIN,
 }))
