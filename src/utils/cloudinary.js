@@ -59,3 +59,5 @@ cloudinary.config({
     
     // console.log(autoCropUrl);    
 })();
+
+export {uploadOnCloudianary}
