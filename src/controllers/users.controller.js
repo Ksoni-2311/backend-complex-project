@@ -5,20 +5,29 @@ import {uploadOnCloudinary} from '../utils/cloudinary.js'
 import { ApiResponse } from '../utils/ApiResponse.js';
 
 
-const generateAccessTokenAndRefreshToken=async(userId)=>{
+const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
-      const user=await User.findById(userId)
-      const accessToken=user.generateAccessToken()
-      const refreshToken=user.generateRefreshToken()
-  
-      user.refreshToken=refreshToken
-      await user.save({ValiditeBeforeSave:false})
-      return {accessToken,refreshToken}
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new ApiError(404, "User not found while generating tokens");
+    }
+
+    const accessToken = user.generateAccessToken;
+    const refreshToken = user.generateRefreshToken;
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+
+  } catch (error) {
+    console.error("Token generation error:", error); // log the actual error
+    throw new ApiError(500, "Something went wrong while generating refresh and access token");
   }
-  catch (error) {
-    throw new ApiError(500,"Error while generating tokens")
-  }
-}
+};
+
+
   
   //   async(userId){
   //   const user=await User.findById(userId)
@@ -112,24 +121,26 @@ if (!avatar) {
 
 })
 
-const loginUser=asyncHandler(async (res,req)=>{
+const loginUser=asyncHandler(async(req,res)=>{
   // (username or email) and password req
   // if no username and email give =>errror
   // chk pass
   // if pass yes add user and generate  refresh and access token
   // send cookies
-
   const {email,username,password}=req.body
+  console.log(email,username,password);
+
   
-  if(!username || !email){
+  if(!username && !email){
     throw new ApiError(400,"username or password is required");
   }
 
   // User ->mongoose ka object h baki ye user apna banaya hua h 
-  const user=await User.findOne(
+  const user=await User.findOne({
     // we are using mongodb function from mongoose to find user by either username or email 
     // {email} ->directly using destructure we can access email
-    $or[{email},{username}] 
+    $or:[{username},{email}]
+  },{}
   )
   if(!user){
     throw new ApiError(404,"User do not exist")
@@ -137,7 +148,7 @@ const loginUser=asyncHandler(async (res,req)=>{
 
   const PasswordValid= await user.isPasswordCorrect(password)
 
-  if(!PasswordVerificationlid){
+  if(!PasswordValid){
     throw new ApiError(401,"Invalid user credentials")
   }
 
@@ -190,8 +201,48 @@ const logoutUser=asyncHandler(async (req,res)=>{
 
 })
 
+const refreshAccessToken=asyncHandler(async (req,res)=>{
+  try {
+    const incomingRefreshToken=req.cookies.refreshToken
+    if(!incomingRefreshToken){
+      throw new ApiError("401","Unauthoruzed request");   
+    }
+    const decodedToken=jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECTET)
+  
+    const user=await User.findById(decodedToken?._id)
+  
+    if(!user){
+      throw new ApiError(401,"Invalid refresh token");
+    }
+  
+    if(incomingRefreshToken!==user?.refreshAccessToken){
+      throw new ApiError(401,"Refresh Token is expired or used"); 
+    }
+  
+    const options={
+      httpOnly:true,
+      secure:true
+    }
+  
+    return res 
+    .status(200)
+    .cookies("accessToken",accessToken,options)
+    .cookies("refreshToken",newRefreshToken,options)
+    .json (new ApiResponse(
+      200,{accessToken,refreshAccessToken:newRefreshToken},
+        "accessToken refreshed"
+    ))
+  }
+   catch (error) {
+    throw new ApiError(401,error?.message||"Invalid refresg token");
+    
+  }
+})
+
+
 export {
   registerUser,
   loginUser,
-  logoutUser
+  logoutUser,
+  refreshAccessToken
 }
