@@ -3,7 +3,7 @@ import multer from 'multer'
 //copied code from multer as it is to store and run it to store a file for a certain while on our server till its uploaded at cloudniary 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, '/tmp/my-uploads')
+      cb(null, './public/temp')
     },
     filename: function (req, file, cb) {
 
