@@ -240,9 +240,97 @@ const refreshAccessToken=asyncHandler(async (req,res)=>{
 })
 
 
+const getCurrentUser=asyncHandler(async (req,res)=>{
+  return res
+  .status(200)
+  .json(200,req.user,"current user fetched successfully")
+})
+
+const updateAcccountDetails=asyncHandler(async(req,res)=>{
+  const {fullName,email}=req.body
+
+  if(!fullName || !email){
+    throw new ApiError(200,"All foelds are required");
+    
+  }
+  const user=await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        fullName,
+        email
+      }
+    }
+    ,{new:true}
+  ).select("-password")
+
+  return res
+  .status(200)
+  .json(new ApiResponse (200,"Acount Details updated successfully"))
+})
+
+
+const updateUserAvatar=asyncHandler(async(req,res)=>{
+  const avatarLocalPath=req.file?.path
+  
+  if(!avatarLocalPath){
+    throw new ApiError(400,req.message||"Avatar file not found");    
+  }
+
+  const avatar=await uploadOnCloudinary(avatarLocalPath)
+
+  if(!avatar.url){
+    throw new ApiError(400,req.message||"Avatar file url not found");    
+  }
+
+  const user=await User.findByIdAndUpdate(
+    req.user?._id,
+    {$set:{
+        avatar:avatar.url
+    }},
+    {new:true}
+  ).select("-password")
+  return res
+  .status(200)
+  .json(new ApiResponse (200,"avatar set successfully"))
+
+})
+
+const updateUserCoverImage=asyncHandler(async(req,res)=>{
+  const coverImageLocalPath=req.file?.path
+  
+  if(!coverImageLocalPath){
+    throw new ApiError(400,req.message||"coverImage file not found");    
+  }
+
+  const coverImage=await uploadOnCloudinary(avatarLocalPath)
+
+  if(!coverImage.url){
+    throw new ApiError(400,req.message||"coverImage file url not found");    
+  }
+
+  const user=await User.findByIdAndUpdate(
+    req.user?._id,
+    {$set:{
+      coverImage:avatar.url
+    }},
+    {new:true}
+  ).select("-password")
+
+
+  return res
+  .status(200)
+  .json(new ApiResponse (200,"coverImage set successfully"))
+
+})
+
+
 export {
   registerUser,
   loginUser,
   logoutUser,
-  refreshAccessToken
+  refreshAccessToken,
+  updateAcccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage
 }
